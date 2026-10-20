@@ -24,9 +24,10 @@ ENV LANG=C.UTF-8 \
     LC_ALL=C.UTF-8 \
     PORT=10000
 
-# Install runtime dependencies via Alpine apk
-RUN apk update && \
-    apk add --no-cache \
+# Install runtime dependencies via Alpine apk.
+# sing-box is installed from its official musl-compatible release below
+# because Alpine 3.20 does not provide a sing-box package.
+RUN apk add --no-cache \
       bash \
       ca-certificates \
       curl \
@@ -38,10 +39,18 @@ RUN apk update && \
       tmux \
       vim \
       caddy \
-      sing-box \
       tzdata \
       procps && \
     rm -rf /var/cache/apk/*
+
+# Install the optional sing-box binary from its official musl release.
+ARG SINGBOX_VERSION="1.14.3"
+RUN set -eux; \
+    SINGBOX_URL="https://github.com/SagerNet/sing-box/releases/download/v${SINGBOX_VERSION}/sing-box-${SINGBOX_VERSION}-linux-amd64-musl.tar.gz"; \
+    curl -fsSL "$SINGBOX_URL" -o /tmp/sing-box.tar.gz; \
+    tar -xzf /tmp/sing-box.tar.gz -C /tmp; \
+    install -m 0755 "/tmp/sing-box-${SINGBOX_VERSION}-linux-amd64-musl/sing-box" /usr/local/bin/sing-box; \
+    rm -rf /tmp/sing-box.tar.gz "/tmp/sing-box-${SINGBOX_VERSION}-linux-amd64-musl"
 
 # Download and install EasyTier (x86_64) with deterministic version URL
 RUN set -eux; \
